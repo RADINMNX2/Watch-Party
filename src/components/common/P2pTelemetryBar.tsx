@@ -2,20 +2,44 @@ import React, { useState } from 'react';
 import { usePeerStore } from '../../store/usePeerStore';
 import { useAppStore } from '../../store/useAppStore';
 import { peerManager } from '../../lib/PeerManager';
-import { Network, Globe, RefreshCw, X, ShieldCheck, Cpu, Zap, SignalHigh } from 'lucide-react';
+import { Network, Globe, RefreshCw, X, ShieldCheck, Cpu, Zap, SignalHigh, Server, Wifi, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export const P2pTelemetryBar: React.FC = () => {
-  const { connectionStatus, networkStats, p2pInfo, peerCount } = usePeerStore();
-  const { roomId, isHost } = useAppStore();
+  const { connectionStatus, networkStats, p2pInfo, peerCount, serverConfig, setServerConfig } = usePeerStore();
+  const { roomId, isHost, addLog } = useAppStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'stats' | 'server' | 'troubleshoot'>('stats');
+
+  const [customHost, setCustomHost] = useState(localStorage.getItem('wp_peer_host') || '');
+  const [customPort, setCustomPort] = useState(localStorage.getItem('wp_peer_port') || '3000');
 
   const handleReconnect = () => {
     if (!roomId) return;
     setIsReconnecting(true);
     peerManager.init(roomId, isHost);
     setTimeout(() => setIsReconnecting(false), 1500);
+  };
+
+  const handleSaveCustomServer = () => {
+    if (customHost.trim()) {
+      localStorage.setItem('wp_peer_host', customHost.trim());
+      localStorage.setItem('wp_peer_port', customPort.trim() || '3000');
+      localStorage.setItem('wp_peer_path', '/peerjs/app');
+      setServerConfig({
+        mode: 'custom',
+        customHost: customHost.trim(),
+        customPort: Number(customPort) || 3000
+      });
+      addLog(`Signaling server set to custom IP: ${customHost.trim()}:${customPort}`, 'success');
+    } else {
+      localStorage.removeItem('wp_peer_host');
+      localStorage.removeItem('wp_peer_port');
+      setServerConfig({ mode: 'auto', customHost: '' });
+      addLog('Reset to Auto Node.js / Cloud Signaling Server', 'info');
+    }
+    if (roomId) handleReconnect();
   };
 
   const getQualityColor = () => {
@@ -69,94 +93,194 @@ export const P2pTelemetryBar: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-indigo-500/40 text-cyan-300">
                 <Globe className="w-6 h-6 text-cyan-400" />
               </div>
               <div>
                 <h3 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
-                  <span>P2P WebRTC & Multi-STUN Engine</span>
+                  <span>P2P & Hotspot Signaling Engine</span>
                   <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-mono border", getQualityColor())}>
                     {networkStats.quality.toUpperCase()}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400">Cross-Operator CGNAT & Long-Distance ICE Traversal</p>
+                <p className="text-xs text-slate-400">Cross-Operator CGNAT & Hotspot / Local IP Direct P2P</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5 mb-5 font-mono text-xs">
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 flex flex-col gap-1">
-                <span className="text-slate-400 text-[10px] font-sans">Latency (RTT)</span>
-                <span className="text-base font-extrabold text-emerald-400">
-                  {networkStats.ping || 12} <span className="text-[10px] text-slate-500 font-sans">ms</span>
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 flex flex-col gap-1">
-                <span className="text-slate-400 text-[10px] font-sans">Jitter</span>
-                <span className="text-base font-extrabold text-cyan-300">
-                  {networkStats.jitter || 0.4} <span className="text-[10px] text-slate-500 font-sans">ms</span>
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 flex flex-col gap-1">
-                <span className="text-slate-400 text-[10px] font-sans">Active Peers</span>
-                <span className="text-base font-extrabold text-purple-300">
-                  {peerCount}
-                </span>
-              </div>
+            {/* Modal Navigation Tabs */}
+            <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-950/80 border border-white/10 mb-5 text-xs font-semibold">
+              <button
+                onClick={() => setActiveTab('stats')}
+                className={cn(
+                  "flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5",
+                  activeTab === 'stats' ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                )}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>آمار شبکه</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('server')}
+                className={cn(
+                  "flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5",
+                  activeTab === 'server' ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                )}
+              >
+                <Server className="w-3.5 h-3.5" />
+                <span>تنظیم IP / سرور</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('troubleshoot')}
+                className={cn(
+                  "flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5",
+                  activeTab === 'troubleshoot' ? "bg-amber-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                )}
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-200" />
+                <span>رفع مشکل اتصال</span>
+              </button>
             </div>
 
-            {/* Active Candidate Details */}
-            <div className="space-y-2 mb-6 text-xs">
-              <div className="p-3 rounded-xl bg-slate-950/90 border border-indigo-500/20 flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active ICE Hole-Punch Candidate</span>
-                <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5 font-mono">
-                  {p2pInfo.candidateType}
-                </span>
-              </div>
+            {activeTab === 'stats' && (
+              <>
+                <div className="grid grid-cols-3 gap-2.5 mb-5 font-mono text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 flex flex-col gap-1">
+                    <span className="text-slate-400 text-[10px] font-sans">Latency (RTT)</span>
+                    <span className="text-base font-extrabold text-emerald-400">
+                      {networkStats.ping || 12} <span className="text-[10px] text-slate-500 font-sans">ms</span>
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
-                  <span className="text-[10px] text-slate-400">Transport Protocol</span>
-                  <span className="font-mono font-bold text-indigo-300">{p2pInfo.protocol}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
-                  <span className="text-[10px] text-slate-400">STUN / TURN Cluster</span>
-                  <span className="font-mono font-bold text-purple-300">14 Active Edge Servers</span>
-                </div>
-              </div>
-            </div>
+                  <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 flex flex-col gap-1">
+                    <span className="text-slate-400 text-[10px] font-sans">Jitter</span>
+                    <span className="text-base font-extrabold text-cyan-300">
+                      {networkStats.jitter || 0.4} <span className="text-[10px] text-slate-500 font-sans">ms</span>
+                    </span>
+                  </div>
 
-            {/* Operator & ISP Compatibility Checklist */}
-            <div className="space-y-1.5 mb-6">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
-                Supported Operator & Network Protocols
-              </span>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                  <span>Mobile 4G/5G (CGNAT)</span>
+                  <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 flex flex-col gap-1">
+                    <span className="text-slate-400 text-[10px] font-sans">Active Peers</span>
+                    <span className="text-base font-extrabold text-purple-300">
+                      {peerCount}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                  <span>Fixed ADSL / VDSL / FTTH</span>
+
+                {/* Active Candidate Details */}
+                <div className="space-y-2 mb-6 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950/90 border border-indigo-500/20 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active ICE Hole-Punch Candidate</span>
+                    <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5 font-mono">
+                      {p2pInfo.candidateType}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
+                      <span className="text-[10px] text-slate-400">Transport Protocol</span>
+                      <span className="font-mono font-bold text-indigo-300">{p2pInfo.protocol}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 flex flex-col gap-0.5">
+                      <span className="text-[10px] text-slate-400">STUN / TURN Cluster</span>
+                      <span className="font-mono font-bold text-purple-300">14 Active Edge Nodes</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                  <span>UDP/3478 & TCP/443 SSL</span>
+              </>
+            )}
+
+            {activeTab === 'server' && (
+              <div className="space-y-4 mb-6 text-xs" dir="rtl">
+                <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-2">
+                  <div className="flex items-center gap-2 text-indigo-300 font-bold">
+                    <Wifi className="w-4 h-4 text-cyan-400" />
+                    <span>تنظیم سرور سیگنالینگ اختصاصی / IP هاتسپات</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    اگر در حال استفاده از Hotspot یا شبکه محلی LAN هستید، می‌توانید IP دقیق دستگاه میزبان (مثلاً <code className="text-cyan-300 font-mono">192.168.1.100</code> یا <code className="text-cyan-300 font-mono">172.20.10.1</code>) را اینجا وارد کنید:
+                  </p>
                 </div>
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                  <span>NTP Millisecond Sync</span>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-[10px] text-slate-400 font-semibold">آدرس IP یا Hostname سرور:</label>
+                    <input
+                      type="text"
+                      placeholder="مثال: 192.168.1.5 یا mydomain.com"
+                      value={customHost}
+                      onChange={(e) => setCustomHost(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-indigo-500 font-mono text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 font-semibold">پورت (Port):</label>
+                    <input
+                      type="text"
+                      placeholder="3000"
+                      value={customPort}
+                      onChange={(e) => setCustomPort(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-indigo-500 font-mono text-xs text-center"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={handleSaveCustomServer}
+                    className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition text-xs shadow-lg"
+                  >
+                    اعمال و اتصال مجدد
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCustomHost('');
+                      setCustomPort('3000');
+                      localStorage.removeItem('wp_peer_host');
+                      localStorage.removeItem('wp_peer_port');
+                      setServerConfig({ mode: 'auto', customHost: '' });
+                      if (roomId) handleReconnect();
+                    }}
+                    className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs"
+                  >
+                    بازنشانی به حالت خودکار
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
+
+            {activeTab === 'troubleshoot' && (
+              <div className="space-y-3 mb-6 text-xs leading-relaxed text-slate-200" dir="rtl">
+                <div className="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-amber-200 font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+                  <span>راهنمای رفع مشکل عدم اتصال در هاتسپات / اپراتورها</span>
+                </div>
+
+                <div className="space-y-2 text-[11px] text-slate-300">
+                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-white/5 space-y-1">
+                    <strong className="text-cyan-300 block">۱. مشکل اتصال در هاتسپات (Hotspot / LAN):</strong>
+                    <p>هنگام اتصال با هاتسپات، مرورگرها آدرس‌های IP داخلی را برای حفظ حریم خصوصی مخفی می‌کنند. برای حل این مشکل، دستگاه میزبانی که لینک اتاق را ساخته، آی‌پای محلی خود (مثل 172.20.10.1 یا 192.168.x.x) را در زبانه «تنظیم IP / سرور» وارد کند.</p>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-white/5 space-y-1">
+                    <strong className="text-purple-300 block">۲. اختلال اپراتورهای همراه اول و ایرانسل (CGNAT):</strong>
+                    <p>برخی اپراتورها پورت‌های P2P استاندارد را مسدود می‌کنند. سیستم ما دارای ۱۴ سرور STUN/TURNS روی پورت SSL 443 است. اگر وصل نشدید، فیلترشکن خود را خاموش/روشن کرده و دکمه «همگام‌سازی مجدد ICE» را بزنید.</p>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/80 border border-white/5 space-y-1">
+                    <strong className="text-emerald-300 block">۳. اطمینان از یکسان بودن کد اتاق:</strong>
+                    <p>دقت کنید تمام کاربران دقیقاً از یک لینک یا کد ۶ رقمی اتاق استفاده نمایند.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="p-3 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 text-[11px] text-indigo-200 flex items-center justify-between">
               <span className="flex items-center gap-1.5 font-sans">
-                <Zap className="w-4 h-4 text-cyan-400" />
-                Zero-Server P2P Encryption Active
+                <Zap className="w-4 h-4 text-cyan-400 animate-pulse" />
+                WebRTC E2EE Active
               </span>
               <button 
                 onClick={handleReconnect}
@@ -164,7 +288,7 @@ export const P2pTelemetryBar: React.FC = () => {
                 className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-lg active:scale-95 disabled:opacity-50"
               >
                 <RefreshCw className={cn("w-3.5 h-3.5", isReconnecting && "animate-spin")} />
-                <span>Re-Sync ICE</span>
+                <span>همگام‌سازی مجدد ICE</span>
               </button>
             </div>
           </div>
@@ -173,3 +297,4 @@ export const P2pTelemetryBar: React.FC = () => {
     </>
   );
 };
+

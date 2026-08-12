@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer as createViteServer } from 'vite';
+import { ExpressPeerServer } from 'peer';
 
 const PORT = 3000;
 const app = express();
@@ -12,6 +13,14 @@ const server = http.createServer(app);
 // Enable CORS and JSON body parsing
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
+
+// Express PeerServer Signaling Node (For Local IP, Hotspot & E2EE P2P Handshakes)
+const peerServer = ExpressPeerServer(server, {
+  path: '/app',
+  allow_discovery: true
+});
+
+app.use('/peerjs', peerServer);
 
 // In-memory Room State Store
 interface RoomMember {

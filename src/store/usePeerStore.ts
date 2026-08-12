@@ -32,6 +32,14 @@ interface PeerState {
     stunClusterCount: number;
     activeStunNode: string;
   };
+
+  serverConfig: {
+    mode: 'auto' | 'custom' | 'cloud';
+    customHost: string;
+    customPort: number;
+    customPath: string;
+    secure: boolean;
+  };
   
   // Setters
   setConnectionStatus: (status: ConnectionState, message: string) => void;
@@ -43,6 +51,7 @@ interface PeerState {
   setReadyState: (isSelfReady: boolean, areAllReady: boolean) => void;
   updateNetworkStats: (stats: Partial<PeerState['networkStats']>) => void;
   updateP2pInfo: (info: Partial<PeerState['p2pInfo']>) => void;
+  setServerConfig: (config: Partial<PeerState['serverConfig']>) => void;
 }
 
 export const usePeerStore = create<PeerState>((set) => ({
@@ -74,6 +83,14 @@ export const usePeerStore = create<PeerState>((set) => ({
     activeStunNode: 'google-global-edge-01'
   },
 
+  serverConfig: {
+    mode: 'auto',
+    customHost: '',
+    customPort: 3000,
+    customPath: '/peerjs/app',
+    secure: true
+  },
+
   setConnectionStatus: (status, message) => set({ connectionStatus: status, statusMessage: message }),
   setPeerCount: (count) => set({ peerCount: count }),
   setVoiceState: (updates) => set((state) => ({ ...state, ...updates })),
@@ -99,4 +116,5 @@ export const usePeerStore = create<PeerState>((set) => ({
     return { networkStats: newStats };
   }),
   updateP2pInfo: (info) => set((state) => ({ p2pInfo: { ...state.p2pInfo, ...info } })),
+  setServerConfig: (config) => set((state) => ({ serverConfig: { ...state.serverConfig, ...config } })),
 }));

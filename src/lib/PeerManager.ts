@@ -60,10 +60,10 @@ class PeerManager {
   private heartbeatInterval: number | null = null;
 
   async init(roomId: string, isHost: boolean) {
-    const { setConnectionStatus, updateP2pInfo } = usePeerStore.getState();
+    const { setConnectionStatus, updateP2pInfo, serverConfig } = usePeerStore.getState();
     const { addLog } = useAppStore.getState();
 
-    setConnectionStatus('connecting', 'Connecting via Node.js Multi-STUN Cluster...');
+    setConnectionStatus('connecting', 'Connecting via Multi-STUN Cluster...');
 
     // Fetch dynamic STUN configuration from Node.js Express server if available
     try {
@@ -80,24 +80,53 @@ class PeerManager {
 
     updateP2pInfo({ stunClusterCount: this.rtcConfig.iceServers?.length || 14, iceState: 'Gathering Candidates' });
     
+    // Destroy previous peer instance if existing
+    if (this.peer) {
+      try { this.peer.destroy(); } catch (e) {}
+      this.peer = null;
+    }
+
+    // Determine PeerJS Options (Express PeerServer vs Cloud vs Custom IP)
+    const peerId = isHost ? PEER_PREFIX + roomId : undefined;
+    let peerOptions: any = {
+      config: this.rtcConfig,
+      debug: 1,
+    };
+
+    const savedHost = localStorage.getItem('wp_peer_host') || serverConfig.customHost;
+    const savedPort = localStorage.getItem('wp_peer_port') ? Number(localStorage.getItem('wp_peer_port')) : serverConfig.customPort;
+    const savedPath = localStorage.getItem('wp_peer_path') || serverConfig.customPath || '/peerjs/app';
+
+    if (savedHost) {
+      peerOptions.host = savedHost;
+      peerOptions.port = savedPort;
+      peerOptions.path = savedPath;
+      peerOptions.secure = localStorage.getItem('wp_peer_secure') === 'true' || window.location.protocol === 'https:';
+      addLog(`Connecting to Custom/Local Signaling Server: ${savedHost}:${savedPort}`, 'info');
+    } else if (window.location.hostname && !window.location.hostname.includes('github.io')) {
+      // Use local/current Express PeerServer if hosted on Node.js / Local IP / Hotspot
+      peerOptions.host = window.location.hostname;
+      peerOptions.port = window.location.port ? Number(window.location.port) : (window.location.protocol === 'https:' ? 443 : 80);
+      peerOptions.path = '/peerjs/app';
+      peerOptions.secure = window.location.protocol === 'https:';
+    }
+
     try {
-      this.peer = new Peer(isHost ? PEER_PREFIX + roomId : undefined, {
-        config: this.rtcConfig,
-        debug: 0,
-      });
-    } catch (e) {
-      setConnectionStatus('disconnected', 'WebRTC Engine Error');
+      this.peer = new Peer(peerId, peerOptions);
+    } catch (e: any) {
+      setConnectionStatus('disconnected', 'WebRTC Initialization Error');
+      addLog(`Peer init failed: ${e.message}`, 'error');
       return;
     }
 
-    this.peer.on('open', () => {
+    this.peer.on('open', (id) => {
       this.setupMediaCallHandler();
       this.startQoSPolling();
       this.startNatKeepAlive();
       
       if (isHost) {
-        setConnectionStatus('connected', 'Room Hosted (Multi-STUN Active)');
-        addLog(`P2P HD Room #${roomId} is live with 14 STUN/TURN Nodes.`, 'success');
+        setConnectionStatus('connected', 'Room Hosted (P2P Ready)');
+        addLog(`P2P Room #${roomId} is live. Peer ID: ${id}`, 'success');
       } else {
         this.connectToHost(PEER_PREFIX + roomId);
       }
@@ -106,12 +135,26 @@ class PeerManager {
     this.peer.on('connection', (conn) => this.setupDataConnection(conn));
     
     this.peer.on('disconnected', () => {
-      setConnectionStatus('connecting', 'Reconnecting ICE...');
+      setConnectionStatus('connecting', 'Reconnecting Signaling...');
       this.peer?.reconnect();
     });
 
     this.peer.on('error', (err) => {
-      setConnectionStatus('disconnected', err.type === 'peer-unavailable' ? 'Room Not Found' : 'WebRTC Connection Error');
+      addLog(`Signaling Error [${err.type}]: ${err.message}`, 'error');
+      
+      if (err.type === 'peer-unavailable') {
+        setConnectionStatus('disconnected', 'Room Not Found (Check Code or Host IP)');
+      } else if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error' || err.type === 'socket-closed') {
+        setConnectionStatus('disconnected', 'Signaling Server Unreachable');
+        // Auto-fallback to public cloud server if local/custom failed
+        if (peerOptions.host && peerOptions.host !== '0.peerjs.com') {
+          addLog('Custom/Local signaling server failed. Falling back to Public Cloud PeerServer...', 'warning');
+          localStorage.removeItem('wp_peer_host');
+          setTimeout(() => this.init(roomId, isHost), 1000);
+        }
+      } else {
+        setConnectionStatus('disconnected', `Connection Error (${err.type})`);
+      }
     });
   }
 
