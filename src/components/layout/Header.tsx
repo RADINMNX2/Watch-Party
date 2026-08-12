@@ -2,6 +2,7 @@ import { Copy, Settings, Tv } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { usePeerStore } from '../../store/usePeerStore';
 import { GpuTelemetryBar } from '../common/GpuTelemetryBar';
+import { P2pTelemetryBar } from '../common/P2pTelemetryBar';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
 
@@ -51,6 +52,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <P2pTelemetryBar />
           <GpuTelemetryBar />
 
           <div className={cn(

@@ -5,6 +5,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { useSubtitleStore } from '../../store/useSubtitleStore';
 import { peerManager } from '../../lib/PeerManager';
 import { cn, formatTime } from '../../lib/utils';
+import { safePlay, safePause } from '../../lib/videoUtils';
 import { PlayerHUD } from './PlayerHUD';
 import { SubtitleOverlay } from './SubtitleOverlay';
 import { TracksModal } from '../modals/TracksModal';
@@ -55,11 +56,8 @@ export function VideoPlayer() {
         }
       };
 
-      const safePlay = () => {
-        vid.play().catch(err => {
-          if (err.name === 'NotAllowedError') setAutoplayBlocked(true);
-        });
-      };
+      const handlePlay = () => safePlay(vid, () => setAutoplayBlocked(true));
+      const handlePause = () => safePause(vid);
 
       switch(type) {
         case 'INIT_STATE':
@@ -70,19 +68,19 @@ export function VideoPlayer() {
             }
             if (payload.playbackRate) vid.playbackRate = payload.playbackRate;
             applySeek(payload.currentTime + (payload.isPaused ? 0 : networkLatency));
-            if (payload.isPaused && !vid.paused) vid.pause();
-            else if (!payload.isPaused && vid.paused) safePlay();
+            if (payload.isPaused && !vid.paused) handlePause();
+            else if (!payload.isPaused && vid.paused) handlePlay();
           });
           break;
         case 'PLAY':
           executeRemoteAction(() => {
             applySeek(payload.currentTime + networkLatency);
-            safePlay();
+            handlePlay();
           });
           break;
         case 'PAUSE':
           executeRemoteAction(() => {
-            vid.pause();
+            handlePause();
             applySeek(payload.currentTime);
           });
           break;
@@ -195,8 +193,11 @@ export function VideoPlayer() {
               addLog('Wait for all peers to be Ready', 'warning');
               return;
             }
-            if (videoRef.current.paused) videoRef.current.play().catch(console.error);
-            else videoRef.current.pause();
+            if (videoRef.current.paused) {
+              safePlay(videoRef.current, () => setAutoplayBlocked(true));
+            } else {
+              safePause(videoRef.current);
+            }
           }}
           onPlay={() => {
             setIsPaused(false);
@@ -267,7 +268,10 @@ export function VideoPlayer() {
             </div>
             <h3 className="text-sm sm:text-lg font-bold text-white mb-1">Autoplay Blocked</h3>
             <button 
-              onClick={() => { setAutoplayBlocked(false); videoRef.current?.play(); }}
+              onClick={() => { 
+                setAutoplayBlocked(false); 
+                if (videoRef.current) safePlay(videoRef.current); 
+              }}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white font-semibold text-xs shadow-lg transition"
             >
               Resume Playback

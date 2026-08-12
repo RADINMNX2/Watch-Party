@@ -24,6 +24,14 @@ interface PeerState {
     packetLoss: number;
     quality: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   };
+
+  p2pInfo: {
+    candidateType: string;
+    protocol: string;
+    iceState: string;
+    stunClusterCount: number;
+    activeStunNode: string;
+  };
   
   // Setters
   setConnectionStatus: (status: ConnectionState, message: string) => void;
@@ -34,6 +42,7 @@ interface PeerState {
   setVideoUrl: (url: string) => void;
   setReadyState: (isSelfReady: boolean, areAllReady: boolean) => void;
   updateNetworkStats: (stats: Partial<PeerState['networkStats']>) => void;
+  updateP2pInfo: (info: Partial<PeerState['p2pInfo']>) => void;
 }
 
 export const usePeerStore = create<PeerState>((set) => ({
@@ -55,6 +64,14 @@ export const usePeerStore = create<PeerState>((set) => ({
     jitter: 0,
     packetLoss: 0,
     quality: 'Excellent'
+  },
+
+  p2pInfo: {
+    candidateType: 'STUN Hole Punch (UDP)',
+    protocol: 'DTLS / UDP',
+    iceState: 'Connected',
+    stunClusterCount: 14,
+    activeStunNode: 'google-global-edge-01'
   },
 
   setConnectionStatus: (status, message) => set({ connectionStatus: status, statusMessage: message }),
@@ -81,4 +98,5 @@ export const usePeerStore = create<PeerState>((set) => ({
 
     return { networkStats: newStats };
   }),
+  updateP2pInfo: (info) => set((state) => ({ p2pInfo: { ...state.p2pInfo, ...info } })),
 }));

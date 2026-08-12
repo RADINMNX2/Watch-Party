@@ -71,11 +71,14 @@ export const SubtitleOverlay: React.FC<Props> = ({ videoRef, currentTime }) => {
 
   // Background Style Map
   const bgClasses = {
-    glass: 'bg-slate-950/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl px-4 sm:px-6 py-2 sm:py-3 text-center max-w-[90%] sm:max-w-[80%]',
-    solid: 'bg-black/90 border border-white/10 rounded-xl px-4 py-2 text-center max-w-[90%]',
-    minimal: 'drop-shadow-[0_3px_6px_rgba(0,0,0,0.95)] text-center max-w-[90%]',
+    cyberpunk: 'bg-slate-950/85 backdrop-blur-2xl border border-purple-500/50 shadow-[0_0_35px_rgba(168,85,247,0.4)] rounded-full px-6 py-2.5 sm:px-8 sm:py-3 text-center max-w-[90%] sm:max-w-[80%]',
+    crystal: 'bg-slate-900/80 backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85)] rounded-2xl px-6 py-3 text-center max-w-[90%] sm:max-w-[80%]',
+    ambient: 'bg-black/85 backdrop-blur-xl border border-indigo-500/40 shadow-[0_0_30px_rgba(99,102,241,0.45)] rounded-2xl px-6 py-2.5 text-center max-w-[90%] sm:max-w-[80%]',
+    cinematic: 'bg-slate-950/95 border border-slate-800 shadow-2xl rounded-full px-6 py-2.5 sm:px-8 text-center max-w-[90%] sm:max-w-[80%]',
+    solid: 'bg-black/95 border border-white/10 rounded-xl px-5 py-2.5 text-center max-w-[90%]',
+    minimal: 'drop-shadow-[0_4px_12px_rgba(0,0,0,1)] text-center max-w-[90%]',
     none: 'drop-shadow-md text-center max-w-[90%]',
-  }[style.bgStyle];
+  }[style.bgStyle] || 'bg-slate-950/85 backdrop-blur-2xl border border-purple-500/50 shadow-2xl rounded-full px-6 py-2.5 text-center max-w-[90%]';
 
   return (
     <div 

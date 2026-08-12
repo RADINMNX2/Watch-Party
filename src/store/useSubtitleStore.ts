@@ -15,7 +15,7 @@ export interface SubtitleStyle {
   fontSize: 'small' | 'medium' | 'large' | 'xlarge';
   fontFamily: 'vazir' | 'jakarta' | 'sans' | 'serif' | 'mono';
   color: string;
-  bgStyle: 'glass' | 'solid' | 'minimal' | 'none';
+  bgStyle: 'cyberpunk' | 'crystal' | 'ambient' | 'cinematic' | 'solid' | 'minimal' | 'none';
   verticalPosition: number; // 0 (bottom) to 80 (near top)
   syncDelay: number; // offset in seconds (-10 to +10)
 }
@@ -39,7 +39,7 @@ export const useSubtitleStore = create<SubtitleState>((set) => ({
     fontSize: 'medium',
     fontFamily: 'vazir',
     color: '#ffffff',
-    bgStyle: 'glass',
+    bgStyle: 'cyberpunk',
     verticalPosition: 12,
     syncDelay: 0,
   },

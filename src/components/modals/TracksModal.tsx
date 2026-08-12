@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, Subtitles, Volume2, Upload, Sliders, Check, Plus, 
   Palette, Type, Layers, Eye, RefreshCw, Zap, ShieldCheck 
@@ -120,8 +121,10 @@ export const TracksModal: React.FC<Props> = ({ isOpen, onClose, videoRef }) => {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="absolute inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn">
+  const targetContainer = document.fullscreenElement || document.body;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn">
       <div className="relative w-full max-w-xl glass-card rounded-3xl border border-purple-500/30 shadow-2xl overflow-hidden p-4 sm:p-6 text-slate-100 flex flex-col max-h-[92vh]">
         
         {/* Header */}
@@ -354,18 +357,21 @@ export const TracksModal: React.FC<Props> = ({ isOpen, onClose, videoRef }) => {
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { key: 'glass', label: 'Frosted Glass Pill 🔮' },
-                    { key: 'solid', label: 'Solid Dark Box 🔳' },
-                    { key: 'minimal', label: 'Text Shadow Only 👤' },
-                    { key: 'none', label: 'Transparent ✨' },
+                    { key: 'cyberpunk', label: '🔮 Neon Cyberpunk Pill' },
+                    { key: 'crystal', label: '💎 Obsidian Crystal Glass' },
+                    { key: 'ambient', label: '✨ Ambient Indigo Halo' },
+                    { key: 'cinematic', label: '🎬 OLED Black Capsule' },
+                    { key: 'solid', label: '🔳 Solid Minimal Box' },
+                    { key: 'minimal', label: '👤 Pure Shadowed Text' },
+                    { key: 'none', label: '✨ Transparent' },
                   ].map((bg) => (
                     <button 
                       key={bg.key}
                       onClick={() => updateStyle({ bgStyle: bg.key as any })}
                       className={cn(
-                        "py-2 px-3 rounded-xl border text-[11px] font-bold transition text-left",
+                        "py-2 px-3 rounded-xl border text-[11px] font-bold transition text-left truncate",
                         style.bgStyle === bg.key 
-                          ? "bg-purple-600/40 border-purple-400 text-white" 
+                          ? "bg-purple-600/40 border-purple-400 text-white shadow-md" 
                           : "bg-slate-950 border-white/10 text-slate-400 hover:text-white"
                       )}
                     >
@@ -448,6 +454,7 @@ export const TracksModal: React.FC<Props> = ({ isOpen, onClose, videoRef }) => {
         </div>
 
       </div>
-    </div>
+    </div>,
+    targetContainer
   );
 };

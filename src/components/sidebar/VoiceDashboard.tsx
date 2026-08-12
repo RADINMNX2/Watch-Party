@@ -147,7 +147,10 @@ export function VoiceDashboard() {
 
       {Object.entries(remoteAudioStreams).map(([peerId, stream]) => (
         <audio key={peerId} autoPlay playsInline muted={isDeafened} ref={(el) => {
-          if (el && el.srcObject !== stream) el.srcObject = stream;
+          if (el && el.srcObject !== stream) {
+            el.srcObject = stream;
+            el.play().catch(() => {});
+          }
         }} className="hidden" />
       ))}
     </div>

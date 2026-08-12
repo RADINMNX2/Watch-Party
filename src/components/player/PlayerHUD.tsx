@@ -5,6 +5,7 @@ import { peerManager } from '../../lib/PeerManager';
 import { formatTime } from '../../lib/utils';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { safePlay, safePause } from '../../lib/videoUtils';
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -47,8 +48,11 @@ export function PlayerHUD({ videoRef, currentTime, duration, isPaused, volume, m
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!videoRef.current || !areAllReady) return;
-    if (isPaused) videoRef.current.play().catch(console.error);
-    else videoRef.current.pause();
+    if (isPaused) {
+      safePlay(videoRef.current);
+    } else {
+      safePause(videoRef.current);
+    }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -3,15 +3,12 @@ import { useAppStore } from './store/useAppStore';
 import { usePeerStore } from './store/usePeerStore';
 import { Activity, MessageSquare, Share2, Users } from 'lucide-react';
 import { cn } from './lib/utils';
-import { useEffect, lazy, Suspense } from 'react';
-import { PlayerSkeleton, SidebarSkeleton, VoiceSkeleton } from './components/common/ComponentSkeletons';
-
-// Modern Lazy Loaded Modules with Code Splitting
-const VideoPlayer = lazy(() => import('./components/player/VideoPlayer').then(m => ({ default: m.VideoPlayer })));
-const ActivityFeed = lazy(() => import('./components/sidebar/ActivityFeed').then(m => ({ default: m.ActivityFeed })));
-const ChatBox = lazy(() => import('./components/sidebar/ChatBox').then(m => ({ default: m.ChatBox })));
-const VoiceDashboard = lazy(() => import('./components/sidebar/VoiceDashboard').then(m => ({ default: m.VoiceDashboard })));
-const WizardModal = lazy(() => import('./components/modals/WizardModal').then(m => ({ default: m.WizardModal })));
+import { useEffect } from 'react';
+import { VideoPlayer } from './components/player/VideoPlayer';
+import { ActivityFeed } from './components/sidebar/ActivityFeed';
+import { ChatBox } from './components/sidebar/ChatBox';
+import { VoiceDashboard } from './components/sidebar/VoiceDashboard';
+import { WizardModal } from './components/modals/WizardModal';
 
 export default function App() {
   const { activeSidebarTab, setActiveSidebarTab, roomId } = useAppStore();
@@ -41,9 +38,7 @@ export default function App() {
         
         {/* Left Panel - GPU Accelerated Video Player */}
         <section className="lg:col-span-8 flex flex-col gap-4 max-w-full min-w-0 gpu-layer">
-          <Suspense fallback={<PlayerSkeleton />}>
-            <VideoPlayer />
-          </Suspense>
+          <VideoPlayer />
         </section>
 
         {/* Right Panel - Sidebar and Voice Dashboard */}
@@ -73,9 +68,7 @@ export default function App() {
               </button>
             </div>
 
-            <Suspense fallback={<SidebarSkeleton />}>
-              {activeSidebarTab === 'activity' ? <ActivityFeed /> : <ChatBox />}
-            </Suspense>
+            {activeSidebarTab === 'activity' ? <ActivityFeed /> : <ChatBox />}
 
             <div className="p-3 bg-slate-950/90 border-t border-white/5 text-xs text-slate-400 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
@@ -89,16 +82,12 @@ export default function App() {
             </div>
           </div>
 
-          <Suspense fallback={<VoiceSkeleton />}>
-            <VoiceDashboard />
-          </Suspense>
+          <VoiceDashboard />
 
         </section>
       </main>
 
-      <Suspense fallback={null}>
-        <WizardModal />
-      </Suspense>
+      <WizardModal />
     </>
   );
 }
