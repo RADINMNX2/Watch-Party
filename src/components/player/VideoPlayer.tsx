@@ -183,7 +183,6 @@ export function VideoPlayer() {
           src={videoUrl}
           className="relative z-10 w-full h-full object-contain bg-black max-w-full cursor-pointer" 
           preload="auto" 
-          crossOrigin="anonymous"
           onClick={() => {
             if (!videoRef.current) return;
             if (!areAllReady) {
@@ -249,7 +248,9 @@ export function VideoPlayer() {
               <Film className="w-6 h-6" />
             </div>
             <h3 className="text-xs sm:text-base font-bold text-slate-200 mb-1">Unable to Load Video</h3>
-            <p className="text-[10px] sm:text-xs text-slate-400 max-w-sm">Please paste a direct MP4 or WebM video download URL above.</p>
+            <p className="text-[10px] sm:text-xs text-slate-400 max-w-sm">
+              Please paste a valid direct video URL. If it's an MKV file, your browser may not support its video codec (like H.265/HEVC) natively. Try an MP4 file.
+            </p>
           </div>
         )}
 
@@ -308,17 +309,27 @@ export function VideoPlayer() {
 
       <div className="glass-card rounded-xl p-3 px-4 flex flex-wrap items-center justify-between gap-2.5 text-xs text-slate-400 max-w-full">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="flex items-center gap-1.5 text-slate-300 font-semibold text-xs">
+          <span className="flex items-center gap-1.5 text-slate-300 font-semibold text-xs" title="WebRTC Sync Protocol">
             <Zap className="w-3.5 h-3.5 text-emerald-400" />
-            P2P Engine
+            <span className="hidden sm:inline">P2P Engine</span>
+            <span className="sm:hidden">P2P</span>
           </span>
           <span className="text-slate-700">|</span>
-          <span className="flex items-center gap-1.5 text-slate-400 text-xs truncate">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-300" title="Network Offset & Latency">
+            <span className={cn(
+              "w-1.5 h-1.5 rounded-full",
+              usePeerStore.getState().networkStats.quality === 'Excellent' ? "bg-emerald-400" : 
+              usePeerStore.getState().networkStats.quality === 'Good' ? "bg-amber-400" : "bg-rose-400"
+            )}></span>
+            {usePeerStore.getState().networkStats.ping}ms
+          </span>
+          <span className="text-slate-700">|</span>
+          <span className="flex items-center gap-1.5 text-slate-400 text-[11px] sm:text-xs truncate">
             <Subtitles className="w-3.5 h-3.5 text-purple-400" />
-            Sub: <strong className="text-slate-200 font-bold truncate">{subtitleLabel}</strong>
+            <span className="hidden sm:inline">Sub:</span> <strong className="text-slate-200 font-bold truncate max-w-[100px]">{subtitleLabel}</strong>
           </span>
         </div>
-        <button onClick={handleForceResync} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-white/10 transition active:scale-95 text-xs shrink-0">
+        <button onClick={handleForceResync} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-white/10 transition active:scale-95 text-[11px] sm:text-xs shrink-0 shadow-inner">
           <RefreshCw className="w-3 h-3 text-purple-400" />
           <span className="font-semibold">Resync</span>
         </button>

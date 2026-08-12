@@ -16,6 +16,14 @@ interface PeerState {
   videoUrl: string;
   isSelfReady: boolean;
   areAllReady: boolean;
+
+  // QoS and Network Stats
+  networkStats: {
+    ping: number;
+    jitter: number;
+    packetLoss: number;
+    quality: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  };
   
   // Setters
   setConnectionStatus: (status: ConnectionState, message: string) => void;
@@ -25,6 +33,7 @@ interface PeerState {
   removeRemoteStream: (peerId: string) => void;
   setVideoUrl: (url: string) => void;
   setReadyState: (isSelfReady: boolean, areAllReady: boolean) => void;
+  updateNetworkStats: (stats: Partial<PeerState['networkStats']>) => void;
 }
 
 export const usePeerStore = create<PeerState>((set) => ({
@@ -41,6 +50,13 @@ export const usePeerStore = create<PeerState>((set) => ({
   isSelfReady: false,
   areAllReady: false,
 
+  networkStats: {
+    ping: 0,
+    jitter: 0,
+    packetLoss: 0,
+    quality: 'Excellent'
+  },
+
   setConnectionStatus: (status, message) => set({ connectionStatus: status, statusMessage: message }),
   setPeerCount: (count) => set({ peerCount: count }),
   setVoiceState: (updates) => set((state) => ({ ...state, ...updates })),
@@ -54,4 +70,15 @@ export const usePeerStore = create<PeerState>((set) => ({
   }),
   setVideoUrl: (url) => set({ videoUrl: url }),
   setReadyState: (isSelfReady, areAllReady) => set({ isSelfReady, areAllReady }),
+  updateNetworkStats: (stats) => set((state) => {
+    const newStats = { ...state.networkStats, ...stats };
+    
+    // Auto-calculate quality based on ping and jitter
+    if (newStats.ping < 50 && newStats.jitter < 15) newStats.quality = 'Excellent';
+    else if (newStats.ping < 120 && newStats.jitter < 30) newStats.quality = 'Good';
+    else if (newStats.ping < 250 && newStats.jitter < 60) newStats.quality = 'Fair';
+    else newStats.quality = 'Poor';
+
+    return { networkStats: newStats };
+  }),
 }));
