@@ -180,7 +180,7 @@ export function VideoPlayer() {
 
         <video 
           ref={videoRef}
-          src={videoUrl}
+          src={videoUrl || undefined}
           className="relative z-10 w-full h-full object-contain bg-black max-w-full cursor-pointer" 
           preload="auto" 
           onClick={() => {

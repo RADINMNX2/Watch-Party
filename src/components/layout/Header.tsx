@@ -30,7 +30,7 @@ export function Header() {
             <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
             <div className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-slate-950 flex items-center justify-center border border-white/10 shadow-xl overflow-hidden">
               {userProfile.avatarUrl ? (
-                <img src={userProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={userProfile.avatarUrl || undefined} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <Tv className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
               )}

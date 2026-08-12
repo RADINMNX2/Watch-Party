@@ -77,7 +77,7 @@ export function WizardModal() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 {userProfile.avatarUrl ? (
-                  <img src={userProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={userProfile.avatarUrl || undefined} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-2xl sm:text-3xl font-extrabold text-white">{nameInput.charAt(0).toUpperCase() || 'V'}</span>
                 )}

@@ -81,7 +81,7 @@ export function VoiceDashboard() {
           <div className="relative shrink-0">
             <div className="w-7 h-7 rounded-full bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-[10px] font-bold text-purple-200 overflow-hidden">
               {userProfile.avatarUrl ? (
-                <img src={userProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={userProfile.avatarUrl || undefined} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <span>{userProfile.name.charAt(0).toUpperCase()}</span>
               )}
