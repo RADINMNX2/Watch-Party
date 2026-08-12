@@ -1,5 +1,5 @@
 import { Headphones, Layers, Maximize, Mic, MicOff, Play, Pause, Volume2, VolumeX, RefreshCw } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePeerStore } from '../../store/usePeerStore';
 import { peerManager } from '../../lib/PeerManager';
 import { formatTime } from '../../lib/utils';

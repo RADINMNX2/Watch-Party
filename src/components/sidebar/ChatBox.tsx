@@ -1,5 +1,5 @@
 import { MessageSquare, Send } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { peerManager } from '../../lib/PeerManager';
 

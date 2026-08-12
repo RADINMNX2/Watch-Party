@@ -54,17 +54,30 @@ class PeerManager {
     iceTransportPolicy: 'all',
     bundlePolicy: 'max-bundle',
     rtcpMuxPolicy: 'require',
-    sdpSemantics: 'unified-plan',
     iceCandidatePoolSize: 10, // Pre-harvest 10 ICE candidates for sub-100ms connection handshakes!
   };
 
   private heartbeatInterval: number | null = null;
 
-  init(roomId: string, isHost: boolean) {
+  async init(roomId: string, isHost: boolean) {
     const { setConnectionStatus, updateP2pInfo } = usePeerStore.getState();
     const { addLog } = useAppStore.getState();
 
-    setConnectionStatus('connecting', 'Connecting via Multi-STUN Cluster...');
+    setConnectionStatus('connecting', 'Connecting via Node.js Multi-STUN Cluster...');
+
+    // Fetch dynamic STUN configuration from Node.js Express server if available
+    try {
+      const res = await fetch('/api/stun-servers');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.iceServers && Array.isArray(data.iceServers)) {
+          this.rtcConfig.iceServers = data.iceServers;
+        }
+      }
+    } catch {
+      // Fallback to embedded STUN cluster if backend unreachable
+    }
+
     updateP2pInfo({ stunClusterCount: this.rtcConfig.iceServers?.length || 14, iceState: 'Gathering Candidates' });
     
     try {

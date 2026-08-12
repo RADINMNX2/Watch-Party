@@ -2,7 +2,7 @@ import { ArrowRight, Camera, Hash, Key, PlusCircle, Popcorn, Settings, User } fr
 import { useAppStore } from '../../store/useAppStore';
 import { peerManager, PEER_PREFIX } from '../../lib/PeerManager';
 import { generateRoomCode } from '../../lib/utils';
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 export function WizardModal() {
   const { isWizardOpen, setIsWizardOpen, wizardStep, setWizardStep, userProfile, setUserProfile, setRoomInfo } = useAppStore();
