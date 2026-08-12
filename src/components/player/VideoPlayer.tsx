@@ -2,14 +2,18 @@ import { CheckCircle, Film, Layers, Link2, PlayCircle, RefreshCw, Subtitles, Zap
 import { useEffect, useRef, useState } from 'react';
 import { usePeerStore } from '../../store/usePeerStore';
 import { useAppStore } from '../../store/useAppStore';
+import { useSubtitleStore } from '../../store/useSubtitleStore';
 import { peerManager } from '../../lib/PeerManager';
 import { cn, formatTime } from '../../lib/utils';
 import { PlayerHUD } from './PlayerHUD';
+import { SubtitleOverlay } from './SubtitleOverlay';
+import { TracksModal } from '../modals/TracksModal';
 
 export function VideoPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { videoUrl, setVideoUrl, isSelfReady, areAllReady } = usePeerStore();
   const { addLog, isHost } = useAppStore();
+  const { activeTrackId, availableTracks } = useSubtitleStore();
   
   const [inputUrl, setInputUrl] = useState('');
   const [error, setError] = useState(false);
@@ -24,7 +28,9 @@ export function VideoPlayer() {
   const [muted, setMuted] = useState(false);
   
   const [bufferedTime, setBufferedTime] = useState(0);
-  const [subtitleLabel, setSubtitleLabel] = useState('Hardsub / None');
+  
+  const activeTrack = availableTracks.find(t => t.id === activeTrackId);
+  const subtitleLabel = activeTrackId === 'none' ? 'Off / None' : (activeTrack?.label || 'Active');
   
   const isRemoteAction = useRef(false);
   const actionLockTimer = useRef<number | null>(null);
@@ -295,6 +301,9 @@ export function VideoPlayer() {
           </div>
         )}
 
+        {/* Subtitle Glass Overlay */}
+        <SubtitleOverlay videoRef={videoRef} currentTime={currentTime} />
+
         <PlayerHUD 
           videoRef={videoRef}
           currentTime={currentTime}
@@ -304,6 +313,13 @@ export function VideoPlayer() {
           muted={muted}
           title={videoUrl ? videoUrl.split('/').pop()?.split('?')[0] || 'Video Stream' : 'No Video Loaded'}
           onTracksClick={() => setShowTracksModal(true)}
+        />
+
+        {/* Tracks Manager Modal (Fullscreen aware) */}
+        <TracksModal 
+          isOpen={showTracksModal} 
+          onClose={() => setShowTracksModal(false)} 
+          videoRef={videoRef} 
         />
       </div>
 

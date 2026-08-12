@@ -68,16 +68,26 @@ export function Header() {
           </div>
 
           {roomId && (
-            <div className="hidden sm:flex items-center gap-1.5 bg-purple-950/30 border border-purple-500/30 rounded-full pl-3.5 pr-1 py-1 shadow-inner shrink-0">
-              <span className="text-xs text-purple-300 font-mono font-bold tracking-wider select-text">{roomId}</span>
+            <>
+              <div className="hidden sm:flex items-center gap-1.5 bg-purple-950/30 border border-purple-500/30 rounded-full pl-3.5 pr-1 py-1 shadow-inner shrink-0">
+                <span className="text-xs text-purple-300 font-mono font-bold tracking-wider select-text">{roomId}</span>
+                <button 
+                  onClick={handleCopy}
+                  title="Copy Room Link" 
+                  className="p-1.5 hover:bg-purple-500/20 rounded-full text-purple-400 hover:text-white transition-all active:scale-90"
+                >
+                  <Copy className={cn("w-3.5 h-3.5", copied && "text-emerald-400")} />
+                </button>
+              </div>
+
               <button 
                 onClick={handleCopy}
                 title="Copy Room Link" 
-                className="p-1.5 hover:bg-purple-500/20 rounded-full text-purple-400 hover:text-white transition-all active:scale-90"
+                className="sm:hidden flex items-center justify-center p-2 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300 hover:text-white transition active:scale-90 shrink-0"
               >
-                <Copy className={cn("w-3.5 h-3.5", copied && "text-emerald-400")} />
+                <Copy className={cn("w-4 h-4", copied && "text-emerald-400")} />
               </button>
-            </div>
+            </>
           )}
 
           <button 
