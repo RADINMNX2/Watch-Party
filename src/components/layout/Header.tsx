@@ -1,6 +1,7 @@
 import { Copy, Settings, Tv } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { usePeerStore } from '../../store/usePeerStore';
+import { GpuTelemetryBar } from '../common/GpuTelemetryBar';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
 
@@ -18,7 +19,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 px-3 sm:px-6 py-3 border-b border-white/5 bg-[#0d121e]/75 backdrop-blur-xl max-w-full">
+    <header className="sticky top-0 z-30 px-3 sm:px-6 py-3 border-b border-white/5 bg-[#0d121e]/75 backdrop-blur-xl max-w-full gpu-layer">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
         <div className="flex items-center gap-2.5 shrink-0">
@@ -50,6 +51,8 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <GpuTelemetryBar />
+
           <div className={cn(
             "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-semibold transition-all shrink-0",
             connectionStatus === 'connected' ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300' :
@@ -89,3 +92,4 @@ export function Header() {
     </header>
   );
 }
+
